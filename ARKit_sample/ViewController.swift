@@ -35,15 +35,19 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        // 球のノードを作成
-        let sphereNode = SCNNode()
+        guard let planeAnchor = anchor as? ARPlaneAnchor else {fatalError()}
         
+        // ノードを作成
+        let planeNode = SCNNode()
+        
+        let geometory = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
+        geometory.materials.first?.diffuse.contents = UIColor.white.withAlphaComponent(0.5)
         // ノードにGeometoryとTranformを設定
-        sphereNode.geometry = SCNSphere(radius: 0.05)
-        sphereNode.position.y += Float(0.05)
+        planeNode.geometry = geometory
+        planeNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1,0, 0)
         
         // 検出面の子要素にする
-        node.addChildNode(sphereNode)
+        node.addChildNode(planeNode)
     }
     
 }
