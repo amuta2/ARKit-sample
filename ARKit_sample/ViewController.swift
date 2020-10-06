@@ -41,7 +41,16 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let planeNode = SCNNode()
         
         let geometory = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
-        geometory.materials.first?.diffuse.contents = UIColor.white.withAlphaComponent(0.5)
+        
+        let floorColor = UIColor.red.withAlphaComponent(0.5)
+        let wallColor = UIColor.blue.withAlphaComponent(0.5)
+        
+        if planeAnchor.alignment == .horizontal {
+            geometory.materials.first?.diffuse.contents = floorColor
+        } else {
+            geometory.materials.first?.diffuse.contents = wallColor
+        }
+        
         // ノードにGeometoryとTranformを設定
         planeNode.geometry = geometory
         planeNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1,0, 0)
