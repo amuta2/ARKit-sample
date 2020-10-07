@@ -23,10 +23,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.scene = SCNScene()
         
         // 特徴点を表示する
-//        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin, ARSCNDebugOptions.showWireframe]
+        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints]
         
         // ライトの追加
-//        sceneView.autoenablesDefaultLighting = true
+        sceneView.autoenablesDefaultLighting = true
         
         // 平面検出
         let configuration = ARWorldTrackingConfiguration()
@@ -34,38 +34,44 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.session.run(configuration)
     }
     
-    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let planeAnchor = anchor as? ARPlaneAnchor else {fatalError()}
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        // 最初にタップした座標を取り出す
+        guard let touch = touches.first else {return}
         
-        // ノードを作成
-        let planeNode = SCNNode()
+        // スクリーン座標に変換する
+        let touchPosition = touch.location(in: sceneView)
         
-        let geometory = SCNPlane(width: CGFloat(planeAnchor.extent.x), height: CGFloat(planeAnchor.extent.z))
+        // タップされた位置のARアンカーを探す
+        let hitTest = sceneView.hitTest(touchPosition, types: .existingPlaneUsingExtent)
         
-        let floorColor = UIColor.red.withAlphaComponent(0.5)
-        let wallColor = UIColor.blue.withAlphaComponent(0.5)
-        
-        if planeAnchor.alignment == .horizontal {
-            geometory.materials.first?.diffuse.contents = floorColor
-        } else {
-            geometory.materials.first?.diffuse.contents = wallColor
+        if !hitTest.isEmpty {
+            // タップした箇所が取得できていればアンカーを追加
+            let anchor = ARAnchor(transform: hitTest.first!.worldTransform)
+            sceneView.session.add(anchor: anchor)
         }
-        
-        // ノードにGeometoryとTranformを設定
-        planeNode.geometry = geometory
-        planeNode.transform = SCNMatrix4MakeRotation(-Float.pi / 2.0, 1,0, 0)
-        
-        // 検出面の子要素にする
-        node.addChildNode(planeNode)
     }
     
-    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let planeAnchor = anchor as? ARPlaneAnchor else {fatalError()}
-        guard let geometoryPlaneNode = node.childNodes.first, let planeGeometory = geometoryPlaneNode.geometry as? SCNPlane else {fatalError()}
+    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+        guard !(anchor is ARPlaneAnchor) else { return }
         
-        planeGeometory.width = CGFloat(planeAnchor.extent.x)
-        planeGeometory.height = CGFloat(planeAnchor.extent.z)
-        geometoryPlaneNode.simdPosition = float3(planeAnchor.center.x, 0, planeAnchor.center.z)
+        // 球のノードを作成
+        let sphereNode = SCNNode()
+
+        // ノードにGeometoryとTranformを設定
+        sphereNode.geometry = SCNSphere(radius: 0.05)
+        sphereNode.position.y += Float(0.05)
+        
+        // 検出面の子要素にする
+        node.addChildNode(sphereNode)
     }
+    
+//    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+//        guard let planeAnchor = anchor as? ARPlaneAnchor else {fatalError()}
+//        guard let geometoryPlaneNode = node.childNodes.first, let planeGeometory = geometoryPlaneNode.geometry as? SCNPlane else {fatalError()}
+//
+//        planeGeometory.width = CGFloat(planeAnchor.extent.x)
+//        planeGeometory.height = CGFloat(planeAnchor.extent.z)
+//        geometoryPlaneNode.simdPosition = float3(planeAnchor.center.x, 0, planeAnchor.center.z)
+//    }
     
 }
